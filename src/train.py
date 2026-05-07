@@ -1,10 +1,8 @@
-
 from pathlib import Path
 
 import joblib
 import pandas as pd
 from sklearn.compose import ColumnTransformer
-from sklearn.decomposition import PCA
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
@@ -92,16 +90,9 @@ def fit_svm(X_train, y_train, feature_names, cv=5):
 
 
 def fit_boosted_trees(X_train, y_train, feature_names, cv=5):
-    max_components = min(len(feature_names), len(X_train) - 1)
-    pca_candidates = [n for n in [10, 15, 20] if n <= max_components]
-
-    if not pca_candidates:
-        pca_candidates = [min(5, max_components)]
-
     model = Pipeline(
         steps=[
             ("preprocessor", make_preprocessor(feature_names)),
-            ("pca", PCA()),
             (
                 "classifier",
                 AdaBoostClassifier(random_state=RANDOM_STATE),
@@ -110,8 +101,8 @@ def fit_boosted_trees(X_train, y_train, feature_names, cv=5):
     )
 
     grid = {
-        "pca__n_components": pca_candidates,
         "classifier__estimator": [
+            DecisionTreeClassifier(max_depth=1, random_state=RANDOM_STATE),
             DecisionTreeClassifier(max_depth=2, random_state=RANDOM_STATE),
             DecisionTreeClassifier(max_depth=3, random_state=RANDOM_STATE),
         ],
@@ -124,8 +115,8 @@ def fit_boosted_trees(X_train, y_train, feature_names, cv=5):
 
 def _fit_grid(model, grid, X_train, y_train, cv=5):
     search = GridSearchCV(
-        model,
-        grid,
+        estimator=model,
+        param_grid=grid,
         scoring="roc_auc",
         cv=cv,
         n_jobs=-1,
@@ -142,7 +133,10 @@ def get_scores(model, X):
     if hasattr(model, "predict_proba"):
         return model.predict_proba(X)[:, 1]
 
-    return model.decision_function(X)
+    if hasattr(model, "decision_function"):
+        return model.decision_function(X)
+
+    raise ValueError("Model has neither predict_proba nor decision_function.")
 
 
 def evaluate_model(model, X_train, y_train, X_test, y_test):
@@ -159,7 +153,12 @@ def evaluate_model(model, X_train, y_train, X_test, y_test):
         "roc_auc": roc_auc_score(y_test, y_test_score),
     }
 
-    report = classification_report(y_test, y_test_pred, zero_division=0)
+    report = classification_report(
+        y_test,
+        y_test_pred,
+        zero_division=0,
+    )
+
     cm = confusion_matrix(y_test, y_test_pred)
 
     return metrics, report, cm
