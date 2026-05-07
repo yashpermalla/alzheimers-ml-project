@@ -1,20 +1,30 @@
-
+# Python
 __pycache__/
 *.py[cod]
+.ipynb_checkpoints/
+
+# Virtual environments
 .venv/
 venv/
 env/
-.DS_Store
-.ipynb_checkpoints/
 
-data/*
+# macOS
+.DS_Store
+
+# Generated data
+data/**
+
+# Generated outputs
+results/**
+models/**
+
+# Keep folder structure
 !data/.gitkeep
 
-results/*
+!results/
 !results/figures/
 !results/tables/
 !results/figures/.gitkeep
 !results/tables/.gitkeep
 
-models/*
 !models/.gitkeep
