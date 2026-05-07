@@ -1,9 +1,0 @@
-test,group_column,chi2,p_value,dof
-demographic_parity_chi_square,GenderGroup,0.01780316827244031,0.8938544963299123,1
-error_rate_parity_chi_square,GenderGroup,3.3932055890538027,0.06546555827738586,1
-demographic_parity_chi_square,EthnicityGroup,0.32337252917169756,0.9555744418657974,3
-error_rate_parity_chi_square,EthnicityGroup,6.165968017345155,0.10380887293483126,3
-demographic_parity_chi_square,EducationGroup,1.1298480283351555,0.7698739719247819,3
-error_rate_parity_chi_square,EducationGroup,3.4747307136131296,0.32405428128292096,3
-demographic_parity_chi_square,AgeGroup,5.6413132055226844,0.05956681812842371,2
-error_rate_parity_chi_square,AgeGroup,0.6970466884509887,0.7057294401244437,2
