@@ -24,7 +24,10 @@ models/**
 !results/
 !results/figures/
 !results/tables/
+!results/training_plots/
+
 !results/figures/.gitkeep
 !results/tables/.gitkeep
+!results/training_plots/.gitkeep
 
 !models/.gitkeep
