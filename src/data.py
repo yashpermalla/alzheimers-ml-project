@@ -38,25 +38,20 @@ def parse_features(features_string):
     ]
 
 
-def choose_features(
-    df,
-    feature_set="selected",
-    custom_features=None,
-    exclude_features=None,
-):
+def choose_features(df, feature_set="selected", custom_features=None):
     if feature_set == "selected":
-        features = [
+        return [
             feature for feature in SELECTED_FEATURES
             if feature in df.columns
         ]
 
-    elif feature_set == "all":
-        features = [
+    if feature_set == "all":
+        return [
             col for col in df.columns
             if col not in ID_COLUMNS + [TARGET]
         ]
 
-    elif feature_set == "custom":
+    if feature_set == "custom":
         if not custom_features:
             raise ValueError(
                 "For custom features, pass --features feature1,feature2,..."
@@ -72,29 +67,9 @@ def choose_features(
                 f"These custom features are missing from the data: {missing}"
             )
 
-        features = custom_features
+        return custom_features
 
-    else:
-        raise ValueError("feature_set must be selected, all, or custom")
-
-    if exclude_features:
-        missing_exclusions = [
-            feature for feature in exclude_features
-            if feature not in features
-        ]
-
-        if missing_exclusions:
-            raise ValueError(
-                "These excluded features are not in the chosen feature set: "
-                f"{missing_exclusions}"
-            )
-
-        features = [
-            feature for feature in features
-            if feature not in exclude_features
-        ]
-
-    return features
+    raise ValueError("feature_set must be selected, all, or custom")
 
 
 def feature_groups(feature_names):
@@ -123,14 +98,32 @@ def get_train_test_data(
 ):
     df = load_data(data_path)
 
-    features = choose_features(
+    all_selected_features = choose_features(
         df,
         feature_set=feature_set,
         custom_features=custom_features,
-        exclude_features=exclude_features,
     )
 
-    X = df[features].copy()
+    if exclude_features:
+        missing_exclusions = [
+            feature for feature in exclude_features
+            if feature not in all_selected_features
+        ]
+
+        if missing_exclusions:
+            raise ValueError(
+                "These excluded features are not in the chosen feature set: "
+                f"{missing_exclusions}"
+            )
+
+        model_features = [
+            feature for feature in all_selected_features
+            if feature not in exclude_features
+        ]
+    else:
+        model_features = all_selected_features
+
+    X = df[all_selected_features].copy()
     y = df[TARGET].copy()
 
     X_train, X_test, y_train, y_test = train_test_split(
@@ -141,4 +134,4 @@ def get_train_test_data(
         random_state=RANDOM_STATE,
     )
 
-    return X_train, X_test, y_train, y_test, features
+    return X_train, X_test, y_train, y_test, model_features
