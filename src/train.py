@@ -4,7 +4,7 @@ import joblib
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import AdaBoostClassifier
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import (
     accuracy_score,
     classification_report,
@@ -22,6 +22,7 @@ from sklearn.tree import DecisionTreeClassifier
 
 from src.config import RANDOM_STATE
 from src.data import feature_groups
+
 
 
 def make_preprocessor(feature_names):
@@ -42,24 +43,27 @@ def make_preprocessor(feature_names):
 
 
 def fit_logistic_regression(X_train, y_train, feature_names, cv=5):
+    from sklearn.linear_model import SGDClassifier
+
     model = Pipeline(
         steps=[
             ("preprocessor", make_preprocessor(feature_names)),
             (
                 "classifier",
-                LogisticRegression(
-                    max_iter=5000,
+                SGDClassifier(
+                    loss="log_loss",
                     class_weight="balanced",
                     random_state=RANDOM_STATE,
+                    max_iter=5000,
+                    tol=1e-4,
                 ),
             ),
         ]
     )
 
     grid = {
-        "classifier__solver": ["liblinear"],
+        "classifier__alpha": [0.00001, 0.0001, 0.001, 0.01],
         "classifier__penalty": ["l1", "l2"],
-        "classifier__C": [0.01, 0.1, 1, 10],
     }
 
     return _fit_grid(model, grid, X_train, y_train, cv=cv)
