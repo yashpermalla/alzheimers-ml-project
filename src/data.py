@@ -1,4 +1,3 @@
-
 from pathlib import Path
 
 import kagglehub
@@ -39,27 +38,63 @@ def parse_features(features_string):
     ]
 
 
-def choose_features(df, feature_set="selected", custom_features=None):
+def choose_features(
+    df,
+    feature_set="selected",
+    custom_features=None,
+    exclude_features=None,
+):
     if feature_set == "selected":
-        return [feature for feature in SELECTED_FEATURES if feature in df.columns]
+        features = [
+            feature for feature in SELECTED_FEATURES
+            if feature in df.columns
+        ]
 
-    if feature_set == "all":
-        return [
+    elif feature_set == "all":
+        features = [
             col for col in df.columns
             if col not in ID_COLUMNS + [TARGET]
         ]
 
-    if feature_set == "custom":
+    elif feature_set == "custom":
         if not custom_features:
-            raise ValueError("For custom features, pass --features feature1,feature2,...")
+            raise ValueError(
+                "For custom features, pass --features feature1,feature2,..."
+            )
 
-        missing = [feature for feature in custom_features if feature not in df.columns]
+        missing = [
+            feature for feature in custom_features
+            if feature not in df.columns
+        ]
+
         if missing:
-            raise ValueError(f"These custom features are missing from the data: {missing}")
+            raise ValueError(
+                f"These custom features are missing from the data: {missing}"
+            )
 
-        return custom_features
+        features = custom_features
 
-    raise ValueError("feature_set must be selected, all, or custom")
+    else:
+        raise ValueError("feature_set must be selected, all, or custom")
+
+    if exclude_features:
+        missing_exclusions = [
+            feature for feature in exclude_features
+            if feature not in features
+        ]
+
+        if missing_exclusions:
+            raise ValueError(
+                "These excluded features are not in the chosen feature set: "
+                f"{missing_exclusions}"
+            )
+
+        features = [
+            feature for feature in features
+            if feature not in exclude_features
+        ]
+
+    return features
 
 
 def feature_groups(feature_names):
@@ -80,9 +115,20 @@ def feature_groups(feature_names):
     return continuous, categorical, binary
 
 
-def get_train_test_data(feature_set="selected", custom_features=None, data_path=None):
+def get_train_test_data(
+    feature_set="selected",
+    custom_features=None,
+    exclude_features=None,
+    data_path=None,
+):
     df = load_data(data_path)
-    features = choose_features(df, feature_set, custom_features)
+
+    features = choose_features(
+        df,
+        feature_set=feature_set,
+        custom_features=custom_features,
+        exclude_features=exclude_features,
+    )
 
     X = df[features].copy()
     y = df[TARGET].copy()
